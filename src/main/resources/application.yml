@@ -1,0 +1,10 @@
+# SPRING PROFILES  
+spring:         
+    # HTTP ENCODING  
+    http:  
+        encoding.charset: UTF-8 
+        encoding.enable: true 
+        encoding.force: true 
+    mvc:
+        view.prefix: /
+        view.suffix: .jsp
