@@ -7,4 +7,4 @@ spring:
         encoding.force: true 
     mvc:
         view.prefix: /
-        view.suffix: .jsp
+        view.suffix: .html
