@@ -53,9 +53,12 @@ public class ChessProcess {
 	}
 	
 	@OnOpen
-	public void onOpen(Session session) {
+	public void onOpen(Session session) throws IOException {
 		this.session = session;
 		webSocketSet.add(this);
+		Map<String,String> info = new HashMap<String, String>();
+		info.put("map", JSON.toJSONString(map));
+		sendMessage(JSON.toJSONString(info));
 	}
 
 	@OnClose
@@ -182,8 +185,11 @@ public class ChessProcess {
 				move(chessman);
 				// 若比赛结束，退出循环
 				if(isEnd(player,chessman.next)) ended = true;
-				// 广播棋盘信息
-				boardMessage(JSON.toJSONString(map)); 
+				// 广播棋盘信息 (当前棋局及最近一步走法)
+				Map<String,String> info = new HashMap<String, String>();
+				info.put("map", JSON.toJSONString(map));
+				info.put("chess", JSON.toJSONString(chessnow));
+				boardMessage(JSON.toJSONString(info)); 
 			}
 		} catch (Exception e) {
 			System.out.println("code -> " + chessnow.code);

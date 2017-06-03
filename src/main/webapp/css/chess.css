@@ -3,88 +3,154 @@
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/A1.gif)
+}
+.A1-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/A1.gif),url(../pics/mark.gif);
 }
 .B1{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/B1.gif)
+}
+.B1-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/B1.gif),url(../pics/mark.gif);
 }
 .C1{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/C1.gif)
+}
+.C1-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/C1.gif),url(../pics/mark.gif);
 }
 .D1{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/D1.gif)
+}
+.D1-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/D1.gif),url(../pics/mark.gif);
 }
 .E1{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/E1.gif)
+}
+.E1-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/E1.gif),url(../pics/mark.gif);
 }
 .F1{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/F1.gif)
+}
+.F1-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/F1.gif),url(../pics/mark.gif);
 }
 .G1{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/G1.gif)
+}
+.G1-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/G1.gif),url(../pics/mark.gif);
 }
 .A2{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/A2.gif)
+}
+.A2-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/A2.gif),url(../pics/mark.gif);
 }
 .B2{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/B2.gif)
+}
+.B2-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/B2.gif),url(../pics/mark.gif);
 }
 .C2{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/C2.gif)
+}
+.C2-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/C2.gif),url(../pics/mark.gif);
 }
 .D2{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/D2.gif)
+}
+.D2-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/D2.gif),url(../pics/mark.gif);
 }
 .E2{
 	width: 57px;
@@ -93,21 +159,40 @@
 	margin-left: 1px;
 	background-image: url(../pics/E2.gif);
 }
+.E2-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/E2.gif),url(../pics/mark.gif);
+}
 .F2{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/F2.gif)
+}
+.F2-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/F2.gif),url(../pics/mark.gif);
 }
 .G2{
 	width: 57px;
 	height: 57px;
 	float: left;
 	margin-left: 1px;
-	
 	background-image: url(../pics/G2.gif)
+}
+.G2-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/G2.gif),url(../pics/mark.gif);
 }
 .mark{
 	width: 57px;
@@ -123,4 +208,11 @@
 	float: left;
 	margin-left: 1px;
 	
+}
+.empty-mark{
+	width: 57px;
+	height: 57px;
+	float: left;
+	margin-left: 1px;
+	background-image: url(../pics/mark.gif);
 }
