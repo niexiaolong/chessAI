@@ -30,7 +30,8 @@ public class ChessProcess {
 
 	private static Map<String, Position> blackPlayer = new HashMap<String, Position>();
 	private static Map<String, Position> redPlayer = new HashMap<String, Position>();
-	
+	// 记录棋盘历史
+	private Map<Integer,String[][]> mapHistory = new HashMap<Integer,String[][]>();
 	private static String[][] map = {
 		{ "E2-2", "D2-2", "C2-2", "B2-2", "A2-0", "B2-1", "C2-1", "D2-1", "E2-1" },
 		{ "0", "0", "0", "0", "0", "0", "0", "0", "0" },
@@ -43,6 +44,14 @@ public class ChessProcess {
 		{ "0", "0", "0", "0", "0", "0", "0", "0", "0" },
 		{ "E1-2", "D1-2", "C1-2", "B1-2", "A1-0", "B1-1", "C1-1", "D1-1", "E1-1" } };
 
+	// 第几步
+	private static int step = 0;
+	
+	@PostConstruct
+	public void init() {
+		recordChessmanInfo();
+	}
+	
 	@OnOpen
 	public void onOpen(Session session) {
 		this.session = session;
@@ -54,7 +63,9 @@ public class ChessProcess {
 		webSocketSet.remove(this);
 	}
 
-	// 接收消息
+	/**
+	 * 接受客户端信息
+	 */
 	@OnMessage
 	public void onMessage(String message, Session session) throws IOException {
 		
@@ -69,14 +80,12 @@ public class ChessProcess {
 		}
 	}
 	
+	/**
+	 * 给指定客户端发送信息
+	 */
 	public void sendMessage (String message) throws IOException {  
         this.session.getBasicRemote().sendText(message);  
     }
-
-	@PostConstruct
-	public void init() {
-		recordChessmanInfo();
-	}
 
 	/**
 	 * 记录双方棋子的信息
@@ -94,91 +103,171 @@ public class ChessProcess {
 			}
 		}
 	}
-
+/*
+	public void minMaxProcess() {
+		boolean ended = false;
+		int i = 0;
+		while (!ended) {
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			// 计数
+			i++;
+			// 基数时，红方走。偶数时，黑方走
+			Map<String, Position> player = i % 2 == 1 ? redPlayer : blackPlayer;
+			
+		}
+	}
+	
+	public void maxMinSearch(Map<String, Position> player){
+		Iterator<String> keys = player.keySet().iterator();
+		// 遍历所有棋子
+		for(Entry<String, Position> chessmanInfo : player.entrySet()){
+			// 搜索深度
+			int depth = 3;
+			String code = chessmanInfo.getKey();
+			Position position = chessmanInfo.getValue();
+			int now = Position.evaluate(code, position);// 当前得分
+			// 遍历该棋子的所有走法
+			List<Position> positions = nextPositionList(code, position);
+			for(Position nextPosition : positions){
+				
+			}
+		}
+		
+	}
+	
+	public int maxSearch(int depth, Entry<String, Position> chessmanInfo){
+		if(depth == 0){
+			return Position.evaluate(chessmanInfo.getKey(), chessmanInfo.getValue());
+		}
+		depth = depth-1;
+		int value = -1;
+		List<Position> positions = nextPositionList(chessmanInfo.getKey(), chessmanInfo.getValue());
+		for(Position nextPosition : positions){
+			minSearch(depth, chessmanInfo);
+		}
+		return 0;
+	}
+	
+	public int minSearch(int depth, Entry<String, Position> chessmanInfo){
+		if(depth == 0){
+			return Position.evaluate(chessmanInfo.getKey(), chessmanInfo.getValue());
+		}
+		return 0;
+	}
+	*/
+	/**
+	 * 随机走法
+	 */
 	public void process() {
-		// 当前棋子代码及棋子位置
-		String chessman = null;
-		Position nowPosition = null;
-		// 下一步要走的地方
-		Position nextPosition = null;
+		ChessMan chessnow = new ChessMan();
 		try {
 			boolean ended = false;
-			int i = 0;
 			while (!ended) {
-				try {
-					Thread.sleep(2000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-	
-				long t1 = System.currentTimeMillis();
-	
+				sleep(2000);
 				// 计数
-				i++;
+				step++;
 				// 基数时，红方走。偶数时，黑方走
-				Map<String, Position> player = null;
-				if (i % 2 == 1) {
-					player = redPlayer;
-				} else {
-					player = blackPlayer;
-				}
+				Map<String, Position> player = step % 2 == 1 ? redPlayer : blackPlayer;
 				// 随机选择一个棋子，记录起编号和位置
 				String[] keys = player.keySet().toArray(new String[0]);
-				chessman = keys[new Random().nextInt(keys.length)];
-				nowPosition = player.get(chessman);
-				// 获取这个棋子可以走的地方
-				List<Position> positions = nextPositionList(chessman,
-						player.get(chessman));
-				// 如果该棋子不能走，则开始遍历所有棋子，找到一个能走的棋子
-				if (positions.size() == 0) {
-					for (String key : keys) {
-						// 更换操作棋子
-						nowPosition = player.get(key);
-						chessman = key;
-						List<Position> ps = nextPositionList(key,
-								player.get(key));
-						if (ps.size() == 0)
-							continue;
-						nextPosition = ps.get(new Random().nextInt(ps
-								.size()));
-						break;
-					}
-					// 穷举之后还未空，说明无子可走
-					if (nextPosition == null) {
-						ended = true;
-						if (player == redPlayer) {
-							System.out.println("黑方胜");
-						} else {
-							System.out.println("红方胜");
-						}
-					}
-				} else {
-					nextPosition = positions.get(new Random().nextInt(positions.size()));
-				}
-				// 原来的位置要记为0
-				map[nowPosition.y][nowPosition.x] = "0";
-				// 棋子移动到新位置
-				map[nextPosition.y][nextPosition.x] = chessman;
-				// 同步红黑方棋子信息
-				recordChessmanInfo();
-				// 发现将被吃了，则游戏结束
-				if (player == redPlayer && player.get("A1-0") == null) {
-					ended = true;
-					System.out.println("黑方胜");
-				} else if (player == blackPlayer && player.get("A2-0") == null) {
-					ended = true;
-					System.out.println("红方胜");
-				}
-				long t2 = System.currentTimeMillis();
-				System.out.println("cost:" + (t2 - t1));
-				
-				boardMessage(JSON.toJSONString(map));
+				chessnow.code = keys[new Random().nextInt(keys.length)];
+				chessnow.now = player.get(chessnow.code);
+				// 获取随机走动的一步
+				ChessMan chessman = randomNextPosition(chessnow.now, chessnow.code, player);
+				// 棋子移动
+				move(chessman);
+				// 若比赛结束，退出循环
+				if(isEnd(player,chessman.next)) ended = true;
+				// 广播棋盘信息
+				boardMessage(JSON.toJSONString(map)); 
 			}
 		} catch (Exception e) {
-			System.out.println("chessman -> " + chessman);
-			System.out.println("now -> " + nowPosition.x + "," + nowPosition.y);
+			System.out.println("code -> " + chessnow.code);
+			System.out.println("now -> " + chessnow.now.x + "," + chessnow.now.y);
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * 获取一个随机的下一步走法
+	 * @param now
+	 * @param code
+	 * @param player
+	 * @return
+	 */
+	public ChessMan randomNextPosition(Position now,String code,Map<String, Position> player){
+		ChessMan chessman = new ChessMan();
+		chessman.code = code;
+		chessman.now = now;
+		// 获取这个棋子可以走的地方
+		List<Position> positions = nextPositionList(code,now);
+		// 如果该棋子不能走，则开始遍历所有棋子，找到一个能走的棋子
+		if (positions.size() == 0) {
+			for (String key : player.keySet()) {
+				// 更换操作棋子
+				chessman.now = player.get(key);
+				chessman.code = key;
+				List<Position> ps = nextPositionList(key,player.get(key));
+				if (ps.size() == 0) continue;
+				chessman.next = ps.get(new Random().nextInt(ps.size()));
+				break;
+			}
+		} else {
+			chessman.next = positions.get(new Random().nextInt(positions.size()));
+		}
+		return chessman;
+	}
+	
+	public void sleep(int Millis){
+		try {
+			Thread.sleep(Millis);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	/**
+	 * 移动
+	 * @param now
+	 * @param next
+	 * @param chessman
+	 */
+	public void move(ChessMan chessman){
+		
+		// 如果没有下一步，则不做移动
+		if(chessman.next == null) return;
+		// 原来的位置要记为0
+		map[chessman.now.y][chessman.now.x] = "0";
+		// 棋子移动到新位置
+		map[chessman.next.y][chessman.next.x] = chessman.code;
+		// 同步红黑方棋子信息（可能出现某些棋子被吃的情况，所以需要同步一次）
+		recordChessmanInfo();
+		// 棋盘记录进历史
+		String[][] oldMap = new String[10][9];
+		System.arraycopy(map, 0, oldMap, 0, map.length);
+		mapHistory.put(step, oldMap);
+		System.out.println("============ " + step + " ============");
+		printMap(map);
+	}
+	
+	/**
+	 * 游戏是否结束
+	 * @param player
+	 * @return
+	 */
+	public boolean isEnd(Map<String, Position> player, Position next){
+		// 红方无棋可走 or 帅被吃
+		if (player == redPlayer && (next == null || player.get("A1-0") == null)){
+			System.out.println("黑方胜");
+			return true;
+		} else if (player == blackPlayer && (next == null || player.get("A2-0") == null)) {
+			System.out.println("红方胜");
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -202,7 +291,7 @@ public class ChessProcess {
 	 * @param now
 	 * @return
 	 */
-	public static List<Position> nextPositionList(String code, Position now) {
+	public List<Position> nextPositionList(String code, Position now) {
 		// 目前轮哪一方落字，1=红方；2=黑方
 		String turn = "1";
 		String offturn = "2";
@@ -253,20 +342,16 @@ public class ChessProcess {
 
 		} else if (code.startsWith("C")) {
 			// 防止数组越界，判断是否相心被填
-			if ((now.y + 1 <= 9 && now.x + 1 <= 8)
-					&& map[now.y + 1][now.x + 1].equals("0")) {
+			if ((now.y + 1 <= 9 && now.x + 1 <= 8) && map[now.y + 1][now.x + 1].equals("0")) {
 				positions.add(new Position(now.x + 2, now.y + 2));
 			}
-			if ((now.y + 1 <= 9 && now.x - 1 >= 0)
-					&& map[now.y + 1][now.x - 1].equals("0")) {
+			if ((now.y + 1 <= 9 && now.x - 1 >= 0) && map[now.y + 1][now.x - 1].equals("0")) {
 				positions.add(new Position(now.x - 2, now.y + 2));
 			}
-			if ((now.y - 1 >= 0 && now.x - 1 >= 0)
-					&& map[now.y - 1][now.x - 1].equals("0")) {
+			if ((now.y - 1 >= 0 && now.x - 1 >= 0) && map[now.y - 1][now.x - 1].equals("0")) {
 				positions.add(new Position(now.x - 2, now.y - 2));
 			}
-			if ((now.y - 1 >= 0 && now.x + 1 <= 8)
-					&& map[now.y - 1][now.x + 1].equals("0")) {
+			if ((now.y - 1 >= 0 && now.x + 1 <= 8) && map[now.y - 1][now.x + 1].equals("0")) {
 				positions.add(new Position(now.x + 2, now.y - 2));
 			}
 			Iterator<Position> it = positions.iterator();
@@ -274,9 +359,11 @@ public class ChessProcess {
 				Position p = it.next();
 				if (turn.equals("1") && !(p.y >= 5)) {
 					it.remove();
+					continue;
 				}
 				if (turn.equals("2") && !(p.y <= 4)) {
 					it.remove();
+					continue;
 				}
 				if (!(p.x >= 0 && p.y >= 0)) {
 					it.remove();
