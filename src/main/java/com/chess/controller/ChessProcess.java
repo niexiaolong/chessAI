@@ -163,38 +163,33 @@ public class ChessProcess {
 	}
 	*/
 	/**
-	 * 随机走法
+	 * 核心步骤 - 随机走法
+	 * @throws IOException 
 	 */
-	public void process() {
+	public void process() throws IOException {
 		ChessMan chessnow = new ChessMan();
-		try {
-			boolean ended = false;
-			while (!ended) {
-				sleep(2000);
-				// 计数
-				step++;
-				// 基数时，红方走。偶数时，黑方走
-				Map<String, Position> player = step % 2 == 1 ? redPlayer : blackPlayer;
-				// 随机选择一个棋子，记录起编号和位置
-				String[] keys = player.keySet().toArray(new String[0]);
-				chessnow.code = keys[new Random().nextInt(keys.length)];
-				chessnow.now = player.get(chessnow.code);
-				// 获取随机走动的一步
-				ChessMan chessman = randomNextPosition(chessnow.now, chessnow.code, player);
-				// 棋子移动
-				move(chessman);
-				// 若比赛结束，退出循环
-				if(isEnd(player,chessman.next)) ended = true;
-				// 广播棋盘信息 (当前棋局及最近一步走法)
-				Map<String,String> info = new HashMap<String, String>();
-				info.put("map", JSON.toJSONString(map));
-				info.put("chess", JSON.toJSONString(chessnow));
-				boardMessage(JSON.toJSONString(info)); 
-			}
-		} catch (Exception e) {
-			System.out.println("code -> " + chessnow.code);
-			System.out.println("now -> " + chessnow.now.x + "," + chessnow.now.y);
-			e.printStackTrace();
+		boolean ended = false;
+		while (!ended) {
+			sleep(2000);
+			// 计数
+			step++;
+			// 基数时，红方走。偶数时，黑方走
+			Map<String, Position> player = step % 2 == 1 ? redPlayer : blackPlayer;
+			// 随机选择一个棋子，记录起编号和位置
+			String[] keys = player.keySet().toArray(new String[0]);
+			chessnow.code = keys[new Random().nextInt(keys.length)];
+			chessnow.now = player.get(chessnow.code);
+			// 获取随机走动的一步
+			ChessMan chessman = randomNextPosition(chessnow.now, chessnow.code, player);
+			// 棋子移动
+			move(chessman);
+			// 若比赛结束，退出循环
+			if(isEnd(player,chessman.next)) ended = true;
+			// 广播棋盘信息 (当前棋局及最近一步走法)
+			Map<String,String> info = new HashMap<String, String>();
+			info.put("map", JSON.toJSONString(map));
+			info.put("chess", JSON.toJSONString(chessman));
+			boardMessage(JSON.toJSONString(info)); 
 		}
 	}
 	

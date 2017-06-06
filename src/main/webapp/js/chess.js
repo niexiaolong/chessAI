@@ -35,8 +35,11 @@ window.onbeforeunload = function () {
 // 填充棋盘
 function fillMap(info){
 	info = JSON.parse(info);
-	map = info.map;
-	chess = info.chess;
+	var map = eval(info.map);
+	var chess = info.chess;
+	if((chess != undefined)){
+		chess = JSON.parse(chess);
+	}
 	var html = '';
 	for (var i = 0; i < map.length; i++) {
 		html += '<div>';
@@ -72,13 +75,27 @@ function fillMap(info){
 			}else{
 				html += '<div class="empty';
 			}
-			if((i == chess.now.y && j == chess.now.x) || (i == chess.next.y && j == chess.next.x)){
-				html += '-mark';
+			if((chess == undefined)){
+				html += '"></div>';
 			}else{
-				html += '"></div>'
+				var nowx = chess.now.x;
+				var nowy = chess.now.y;
+				var nextx = chess.next.x;
+				var nexty = chess.next.y;
+				if((i == nowy && j == nowx) || (i == nexty && j == nextx)){
+					html += '-mark"></div>';
+				}else{
+					html += '"></div>';
+				}
 			}
 		}
 		html += "</div>";
 	}
 	$("#map").html(html);
+}
+
+function begin(){
+	$.get("/begin", function(){
+		$("#begin").attr("disabled",true);
+	});
 }
