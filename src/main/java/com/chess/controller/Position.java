@@ -17,11 +17,7 @@ public class Position {
 		this.x = x;
 		this.y = y;
 	}
-	
-	public static Position newInstance(int x, int y){
-		return new Position(x, y);
-	}
-	
+
 	// 红方 帅&兵 在各个点的分数
 	private static int[][] mapAG1 = {
 			{9,  9,  9, 11, 13, 11,  9,  9,  9},
@@ -106,42 +102,53 @@ public class Position {
 			}
 		}
 	}
-	
+
 	/**
 	 * 指定棋谱的得分
-	 * @param map
-	 * @return
 	 */
 	public static int evaluate(Map<String, Position> player){
 		int score = 0;
 		for(Entry<String, Position> entry : player.entrySet()){
 			String code = entry.getKey();
 			Position p = entry.getValue();
-			
-			int[][] scoreMap = null;
-			if(code.startsWith("A1") || code.startsWith("G1")){
-				scoreMap = mapAG1;
-			}else if(code.startsWith("B1") || code.startsWith("C1")){
-				scoreMap = mapBC1;
-			}else if(code.startsWith("D1")){
-				scoreMap = mapD1;
-			}else if(code.startsWith("E1")){
-				scoreMap = mapE1;
-			}else if(code.startsWith("F1")){
-				scoreMap = mapF1;
-			}else if(code.startsWith("A2") || code.startsWith("G2")){
-				scoreMap = mapAG2;
-			}else if(code.startsWith("B2") || code.startsWith("C2")){
-				scoreMap = mapBC2;
-			}else if(code.startsWith("D2")){
-				scoreMap = mapD2;
-			}else if(code.startsWith("E2")){
-				scoreMap = mapE2;
-			}else if(code.startsWith("F2")){
-				scoreMap = mapF2;
-			}
+			int[][] scoreMap = codeMap(code);
 			score += scoreMap[p.y][p.x];
 		}
 		return score;
 	}
+
+	/**
+	 * 指定棋谱的得分
+	 */
+	public static int evaluate(String code, Position p){
+        int[][] scoreMap = codeMap(code);
+        if(scoreMap == null) return 0;
+        return scoreMap[p.y][p.x];
+	}
+
+	private static int[][] codeMap(String code){
+        int[][] scoreMap = null;
+        if(code.startsWith("A1") || code.startsWith("G1")){
+            scoreMap = mapAG1;
+        }else if(code.startsWith("B1") || code.startsWith("C1")){
+            scoreMap = mapBC1;
+        }else if(code.startsWith("D1")){
+            scoreMap = mapD1;
+        }else if(code.startsWith("E1")){
+            scoreMap = mapE1;
+        }else if(code.startsWith("F1")){
+            scoreMap = mapF1;
+        }else if(code.startsWith("A2") || code.startsWith("G2")){
+            scoreMap = mapAG2;
+        }else if(code.startsWith("B2") || code.startsWith("C2")){
+            scoreMap = mapBC2;
+        }else if(code.startsWith("D2")){
+            scoreMap = mapD2;
+        }else if(code.startsWith("E2")){
+            scoreMap = mapE2;
+        }else if(code.startsWith("F2")){
+            scoreMap = mapF2;
+        }
+        return scoreMap;
+    }
 }

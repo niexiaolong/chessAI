@@ -24,18 +24,13 @@ public class ChessController {
 	@ResponseBody
 	@RequestMapping("/begin")
 	public String begin(){
-		new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				try {
-					process.process();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+		new Thread(() -> {
+			try {
+				process.process();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}).start();
-		
 		return "success";
 	}
 }

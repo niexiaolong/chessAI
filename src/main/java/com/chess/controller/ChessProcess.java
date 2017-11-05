@@ -1,13 +1,7 @@
 package com.chess.controller;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.CopyOnWriteArraySet;
+import com.alibaba.fastjson.JSON;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.websocket.OnClose;
@@ -15,10 +9,9 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
-
-import org.springframework.stereotype.Component;
-
-import com.alibaba.fastjson.JSON;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Component
 @ServerEndpoint("/websocket")
@@ -28,10 +21,10 @@ public class ChessProcess {
 
 	private static CopyOnWriteArraySet<ChessProcess> webSocketSet = new CopyOnWriteArraySet<>();
 
-	private static Map<String, Position> blackPlayer = new HashMap<String, Position>();
-	private static Map<String, Position> redPlayer = new HashMap<String, Position>();
+	private static Map<String, Position> blackPlayer = new HashMap<>();
+	private static Map<String, Position> redPlayer = new HashMap<>();
 	// 记录棋盘历史
-	private Map<Integer,String[][]> mapHistory = new HashMap<Integer,String[][]>();
+	private Map<Integer,String[][]> mapHistory = new HashMap<>();
 	private static String[][] map = {
 		{ "E2-2", "D2-2", "C2-2", "B2-2", "A2-0", "B2-1", "C2-1", "D2-1", "E2-1" },
 		{ "0", "0", "0", "0", "0", "0", "0", "0", "0" },
@@ -56,7 +49,7 @@ public class ChessProcess {
 	public void onOpen(Session session) throws IOException {
 		this.session = session;
 		webSocketSet.add(this);
-		Map<String,String> info = new HashMap<String, String>();
+		Map<String,String> info = new HashMap<>();
 		info.put("map", JSON.toJSONString(map));
 		sendMessage(JSON.toJSONString(info));
 	}
@@ -77,7 +70,7 @@ public class ChessProcess {
 	/**
 	 * 广播消息
 	 */
-	public void boardMessage(String message) throws IOException{
+	private void boardMessage(String message) throws IOException{
 		for (ChessProcess item : webSocketSet) {
 			item.sendMessage(message);
 		}
@@ -86,14 +79,14 @@ public class ChessProcess {
 	/**
 	 * 给指定客户端发送信息
 	 */
-	public void sendMessage (String message) throws IOException {  
+	private void sendMessage (String message) throws IOException {
         this.session.getBasicRemote().sendText(message);  
     }
 
 	/**
 	 * 记录双方棋子的信息
 	 */
-	public void recordChessmanInfo() {
+	private void recordChessmanInfo() {
 		redPlayer.clear();
 		blackPlayer.clear();
 		for (int i = 0; i < map.length; i++) {
@@ -163,8 +156,7 @@ public class ChessProcess {
 	}
 	*/
 	/**
-	 * 核心步骤 - 随机走法
-	 * @throws IOException 
+	 * 核心步骤
 	 */
 	public void process() throws IOException {
 		ChessMan chessnow = new ChessMan();
@@ -175,32 +167,69 @@ public class ChessProcess {
 			step++;
 			// 基数时，红方走。偶数时，黑方走
 			Map<String, Position> player = step % 2 == 1 ? redPlayer : blackPlayer;
-			// 随机选择一个棋子，记录起编号和位置
-			String[] keys = player.keySet().toArray(new String[0]);
-			chessnow.code = keys[new Random().nextInt(keys.length)];
-			chessnow.now = player.get(chessnow.code);
-			// 获取随机走动的一步
-			ChessMan chessman = randomNextPosition(chessnow.now, chessnow.code, player);
+			// 下一步要走的棋
+            ChessMan chessman = null;
+            // 红方使用最大走法
+            if(player == redPlayer){
+                chessman = maxNextPosition(player);
+            }else{ // 黑房选择随机走法
+                // 随机选择一个棋子，记录起编号和位置
+                String[] keys = player.keySet().toArray(new String[0]);
+                chessnow.code = keys[new Random().nextInt(keys.length)];
+                chessnow.now = player.get(chessnow.code);
+                // 获取随机走动的一步
+                chessman = randomNextPosition(chessnow.now, chessnow.code, player);
+            }
 			// 棋子移动
 			move(chessman);
+            // 广播棋盘信息 (当前棋局及最近一步走法)
+            Map<String,String> info = new HashMap<>();
 			// 若比赛结束，退出循环
-			if(isEnd(player,chessman.next)) ended = true;
-			// 广播棋盘信息 (当前棋局及最近一步走法)
-			Map<String,String> info = new HashMap<String, String>();
+            int result = isEnd(player,chessman.next);
+			if(result != 0){
+			    ended = true;
+                info.put("success", String.valueOf(result));
+            }
 			info.put("map", JSON.toJSONString(map));
 			info.put("chess", JSON.toJSONString(chessman));
 			boardMessage(JSON.toJSONString(info)); 
 		}
 	}
+
+    /**
+     * 只考虑一步情况 最大score走法
+     * @param player
+     * @return
+     */
+	private ChessMan maxNextPosition(Map<String, Position> player){
+	    int improveScore = 0;
+        ChessMan chessman = new ChessMan();
+        // 获取所有步骤
+        for(Map.Entry<String, Position> entry : player.entrySet()){
+            List<Position> positions = nextPositionList(entry.getKey(),entry.getValue());
+            // 获取该棋子的所有走法
+            for(Position nextPosition : positions){
+                int newScore = Position.evaluate(entry.getKey(),nextPosition);
+                int oldScore = Position.evaluate(entry.getKey(),entry.getValue());
+                // 自己子力的提升
+                int selfAdd = newScore - oldScore;
+                // 别人子力的减少
+                int otherDel = Position.evaluate(map[nextPosition.y][nextPosition.x],nextPosition);
+                if((selfAdd + otherDel) > improveScore){
+                    chessman.code = entry.getKey();
+                    chessman.now = entry.getValue();
+                    chessman.next = nextPosition;
+                    improveScore = selfAdd + otherDel;
+                }
+            }
+        }
+        return chessman;
+    }
 	
 	/**
 	 * 获取一个随机的下一步走法
-	 * @param now
-	 * @param code
-	 * @param player
-	 * @return
 	 */
-	public ChessMan randomNextPosition(Position now,String code,Map<String, Position> player){
+	private ChessMan randomNextPosition(Position now,String code,Map<String, Position> player){
 		ChessMan chessman = new ChessMan();
 		chessman.code = code;
 		chessman.now = now;
@@ -232,9 +261,6 @@ public class ChessProcess {
 	}
 	/**
 	 * 移动
-	 * @param now
-	 * @param next
-	 * @param chessman
 	 */
 	public void move(ChessMan chessman){
 		
@@ -246,6 +272,7 @@ public class ChessProcess {
 		map[chessman.next.y][chessman.next.x] = chessman.code;
 		// 同步红黑方棋子信息（可能出现某些棋子被吃的情况，所以需要同步一次）
 		recordChessmanInfo();
+
 		// 棋盘记录进历史
 		String[][] oldMap = new String[10][9];
 		System.arraycopy(map, 0, oldMap, 0, map.length);
@@ -256,27 +283,27 @@ public class ChessProcess {
 	
 	/**
 	 * 游戏是否结束
-	 * @param player
-	 * @return
+     * 0 = 未结束
+     * 1 = 红方胜
+     * 2 = 黑方胜
 	 */
-	public boolean isEnd(Map<String, Position> player, Position next){
+	private int isEnd(Map<String, Position> player, Position next){
+
 		// 红方无棋可走 or 帅被吃
-		if (player == redPlayer && (next == null || player.get("A1-0") == null)){
+		if (player == redPlayer && next == null){
 			System.out.println("黑方胜");
-			return true;
-		} else if (player == blackPlayer && (next == null || player.get("A2-0") == null)) {
+			return 2;
+		} else if (player == blackPlayer && next == null) {
 			System.out.println("红方胜");
-			return true;
+			return 1;
 		}
-		return false;
+		return 0;
 	}
 
 	/**
 	 * 打印棋谱
-	 * 
-	 * @param map
 	 */
-	public static void printMap(String[][] map) {
+	private static void printMap(String[][] map) {
 		for (int i = 0; i < map.length; i++) {
 			for (int j = 0; j < map[0].length; j++) {
 				System.out.print(map[i][j] + "\t");
@@ -287,12 +314,8 @@ public class ChessProcess {
 
 	/**
 	 * 判断棋子下一步可以走的所有点
-	 * 
-	 * @param code
-	 * @param now
-	 * @return
 	 */
-	public List<Position> nextPositionList(String code, Position now) {
+	private List<Position> nextPositionList(String code, Position now) {
 		// 目前轮哪一方落字，1=红方；2=黑方
 		String turn = "1";
 		String offturn = "2";
@@ -300,7 +323,7 @@ public class ChessProcess {
 			turn = "2";
 			offturn = "1";
 		}
-		List<Position> positions = new ArrayList<Position>();
+		List<Position> positions = new ArrayList<>();
 		if (code.startsWith("A")) {
 			// 先按规则加入所有能到的点
 			positions.add(new Position(now.x + 1, now.y));
@@ -319,7 +342,8 @@ public class ChessProcess {
 				if (map[p.y][p.x].contains(code.substring(1, 3))) {
 					it.remove();
 				}
-			}
+				//TODO   如果走了这一步后，被将军了和与对方将帅对着了，该步也不能走。待完善
+            }
 		} else if (code.startsWith("B")) {
 			positions.add(new Position(now.x + 1, now.y + 1));
 			positions.add(new Position(now.x - 1, now.y + 1));
@@ -487,7 +511,6 @@ public class ChessProcess {
 						positions.add(new Position(i, now.y));
 					} else {
 						goon = false;
-						continue;
 					}
 				} else {
 					if (map[now.y][i].contains(turn + "-")) {
@@ -495,8 +518,6 @@ public class ChessProcess {
 					} else if (map[now.y][i].contains(offturn + "-")) {
 						positions.add(new Position(i, now.y));
 						break;
-					} else {
-						continue;
 					}
 				}
 			}
@@ -508,7 +529,6 @@ public class ChessProcess {
 						positions.add(new Position(i, now.y));
 					} else {
 						goon = false;
-						continue;
 					}
 				} else {
 					if (map[now.y][i].contains(turn + "-")) {
@@ -516,8 +536,6 @@ public class ChessProcess {
 					} else if (map[now.y][i].contains(offturn + "-")) {
 						positions.add(new Position(i, now.y));
 						break;
-					} else {
-						continue;
 					}
 				}
 			}
@@ -529,7 +547,6 @@ public class ChessProcess {
 						positions.add(new Position(now.x, i));
 					} else {
 						goon = false;
-						continue;
 					}
 				} else {
 					if (map[i][now.x].contains(turn + "-")) {
@@ -537,8 +554,6 @@ public class ChessProcess {
 					} else if (map[i][now.x].contains(offturn + "-")) {
 						positions.add(new Position(now.x, i));
 						break;
-					} else {
-						continue;
 					}
 				}
 			}
@@ -550,7 +565,6 @@ public class ChessProcess {
 						positions.add(new Position(now.x, i));
 					} else {
 						goon = false;
-						continue;
 					}
 				} else {
 					if (map[i][now.x].contains(turn + "-")) {
@@ -558,8 +572,6 @@ public class ChessProcess {
 					} else if (map[i][now.x].contains(offturn + "-")) {
 						positions.add(new Position(now.x, i));
 						break;
-					} else {
-						continue;
 					}
 				}
 			}
@@ -598,4 +610,19 @@ public class ChessProcess {
 		}
 		return positions;
 	}
+
+    /**
+     * 根据棋子获取其对立面
+     * @param code
+     * @return
+     */
+	private Map<String, Position> opposePlayer(String code){
+        Map<String, Position> oppose = null;
+	    if(code.contains("1-")) {
+            oppose = blackPlayer;
+        }else if(code.contains("2-")){
+            oppose = redPlayer;
+        }
+	    return oppose;
+    }
 }

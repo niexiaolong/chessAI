@@ -35,6 +35,11 @@ window.onbeforeunload = function () {
 // 填充棋盘
 function fillMap(info){
 	info = JSON.parse(info);
+	if(info.success == 1){
+        layer.msg('红方胜');
+    }else if(info.success == 2){
+        layer.msg('黑方胜');
+    }
 	var map = eval(info.map);
 	var chess = info.chess;
 	if((chess != undefined)){
